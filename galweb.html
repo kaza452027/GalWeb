@@ -1,0 +1,2347 @@
+<!doctype html>
+<html lang="zh-CN" class="scroll-smooth">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gal Library Pro · 资源分享</title>
+  <meta name="description" content="Galgame 资源分享与评测库：聚合百科/评测/公告/攻略等资料；支持制作社图鉴、标签/平台/年份筛选，网格/时间线视图，偏好导出/导入。" />
+  <meta name="color-scheme" content="light dark" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+
+  <style>
+    /* =================== 主题与滚动变量 =================== */
+    :root {
+      /* 浅色主系 */
+      --ink: #0b1324;
+      --ink-2: #1f2a44;
+      --brand: #34c6cf;
+      /* 青绿主色 */
+      --brand-2: #f78cc7;
+      /* 柔粉副色 */
+      --brand-3: #ffa8a8;
+      /* 橙粉点缀 */
+      --brand-4: #8a7af7;
+      /* 靛紫点缀（已用） */
+      /* 新增两层（浅色更“奶”） */
+      --brand-5: #9be7ff;
+      /* 淡天青 */
+      --brand-6: #ffd6ea;
+      /* 淡粉雾 */
+
+      /* 暗色主系 */
+      --d-brand: #7e6af7;
+      /* 紫 */
+      --d-2: #2e9df5;
+      /* 蓝 */
+      --d-3: #19c2b3;
+      /* 深青 */
+      /* 新增两层（暗色更“深”） */
+      --d-4: #3b82f6;
+      /* 靛蓝 */
+      --d-5: #6d28d9;
+      /* 深紫 */
+
+      --card: rgba(255, 255, 255, 0.80);
+      /* 浅色模式：白色 80% 不透明 */
+      --card-dark: rgba(15, 23, 42, 0.82);
+      /* 暗色模式：深蓝 82% 不透明 */
+
+
+      --p: 0;
+      /* 滚动比例 0~1 （JS 更新） */
+      --a1: 120deg;
+      /* 角度1（JS 更新） */
+      --a2: 220deg;
+      /* 角度2（JS 更新） */
+      --x1: 20%;
+      /* 光斑1 x */
+      --y1: -6%;
+      /* 光斑1 y */
+      --x2: 86%;
+      /* 光斑2 x */
+      --y2: 2%;
+      /* 光斑2 y */
+
+      --photo-url: url("./cele.jpg");
+      /*背景图 */
+      --photo-alpha: .55;
+      /* 浅色背景图透明度（更低以凸显渐变） */
+      --photo-alpha-dark: .45;
+      /* 暗色背景图透明度（更低以凸显渐变） */
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      color: var(--ink);
+      background: transparent
+    }
+
+    /* =================== 背景层（图片 + 多层滚动渐变 + 网格纹理） =================== */
+    #bg-stack {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #bg-stack .bg-photo {
+      position: absolute;
+      inset: 0;
+      background-image: var(--photo-url);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      filter: saturate(1.05) contrast(1.06);
+      opacity: var(--photo-alpha);
+      transition: opacity .35s ease, filter .35s ease;
+    }
+
+    /* 浅色：覆盖更广、颜色更“奶”、滚动更明显 */
+    #bg-stack .bg-grad {
+      position: absolute;
+      inset: 0;
+      background:
+        /* 亮青光斑（随滚动左右/上下移动） */
+        radial-gradient(900px 460px at var(--x1) var(--y1), color-mix(in hsl, var(--brand) 48%, transparent), transparent 60%),
+        /* 柔粉光斑（随滚动反向移动） */
+        radial-gradient(820px 420px at var(--x2) var(--y2), color-mix(in hsl, var(--brand-2) 42%, transparent), transparent 62%),
+        /* 新增：天青大光晕（覆盖更广） */
+        radial-gradient(1100px 520px at 50% 120%, color-mix(in hsl, var(--brand-5) 40%, transparent), transparent 70%),
+        /* 新增：淡粉雾带（中层过渡） */
+        conic-gradient(from calc(var(--a1) + 20deg) at 50% 110%, color-mix(in hsl, var(--brand-6) 26%, transparent) 0 24%, transparent 24% 80%, color-mix(in hsl, var(--brand-3) 12%, transparent) 80%),
+        /* 原扇形：橙粉 + 青 */
+        conic-gradient(from var(--a1) at 50% 115%,
+          color-mix(in hsl, var(--brand-3) 26%, transparent) 0 18%,
+          transparent 18% 52%,
+          color-mix(in hsl, var(--brand) 22%, transparent) 52% 78%,
+          transparent 78%),
+        /* 基底 */
+        linear-gradient(180deg, #f4fbff, #fdf6ff 45%, #fff7f6 100%);
+      transition: background .1s linear;
+      opacity: .80;
+    }
+
+    #bg-stack .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(100, 116, 139, .06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(100, 116, 139, .06) 1px, transparent 1px);
+      background-size: 26px 26px, 26px 26px;
+      mask-image: radial-gradient(980px 560px at 50% 0%, black, transparent 80%);
+    }
+
+    /* 暗色：更深邃，滚动时角度/位置/浓度变化更明显 */
+    .dark #bg-stack .bg-photo {
+      opacity: var(--photo-alpha-dark);
+      filter: saturate(1.07) contrast(1.08) brightness(.9);
+    }
+
+    .dark #bg-stack .bg-grad {
+      background:
+        radial-gradient(980px 500px at var(--x1) var(--y1), color-mix(in hsl, var(--d-brand) 52%, transparent), transparent 60%),
+        radial-gradient(860px 460px at var(--x2) var(--y2), color-mix(in hsl, var(--d-2) 44%, transparent), transparent 62%),
+        /* 新增：深蓝外圈 */
+        radial-gradient(1200px 600px at 50% -10%, color-mix(in hsl, var(--d-4) 22%, transparent), transparent 70%),
+        /* 新增：深紫扇形 */
+        conic-gradient(from calc(var(--a2) - 30deg) at 50% 118%, color-mix(in hsl, var(--d-5) 28%, transparent) 0 30%, transparent 30% 85%, color-mix(in hsl, var(--d-3) 18%, transparent) 85%),
+        /* 原扇形：深青/紫 */
+        conic-gradient(from var(--a2) at 50% 115%,
+          color-mix(in hsl, var(--d-3) 34%, transparent) 0 22%,
+          transparent 22% 58%,
+          color-mix(in hsl, var(--d-brand) 30%, transparent) 58% 82%,
+          transparent 82%),
+        linear-gradient(180deg, #0a1222, #0e1730 68%, #0a1121 100%);
+      opacity: .85;
+    }
+
+    .dark #bg-stack .bg-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, .08) 1px, transparent 1px);
+    }
+
+    /* =================== 全局细节 =================== */
+    .glass {
+      background: rgba(255, 255, 255, .66);
+      backdrop-filter: blur(12px);
+    }
+
+    .dark .glass {
+      background: rgba(13, 18, 34, .55);
+    }
+
+    .soft-shadow {
+      box-shadow: 0 16px 40px rgba(2, 6, 23, .12);
+    }
+
+    .ring-grad {
+      border: 1px solid transparent;
+      background:
+        linear-gradient(var(--card), var(--card)) padding-box,
+        linear-gradient(135deg, var(--brand) 10%, var(--brand-2) 50%, var(--brand-3) 90%) border-box;
+      border-radius: 18px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, .08);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    .dark .card {
+      background: rgba(15, 23, 42, 0.45);
+      border-color: rgba(148, 163, 184, .16);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    .btn {
+      display: inline-flex;
+      /* 新增 */
+      align-items: center;
+      /* 新增 */
+      justify-content: center;
+      /* 新增 */
+      line-height: 1;
+      /* 新增：去掉基线差异 */
+      border-radius: 12px;
+      border: 1px solid rgba(15, 23, 42, .12);
+      padding: .55rem .9rem;
+      background: rgba(255, 255, 255, .75);
+      transition: box-shadow .2s ease, transform .15s ease;
+    }
+
+
+
+    .btn:hover {
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .12);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .dark .btn {
+      background: rgba(15, 23, 42, .7);
+      border-color: rgba(148, 163, 184, .18);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: #fff;
+      border: 0;
+    }
+
+    .btn-primary:hover {
+      opacity: .96;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .25rem .55rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .pill.c1 {
+      background: color-mix(in hsl, var(--brand) 75%, #fff);
+    }
+
+    .pill.c2 {
+      background: color-mix(in hsl, var(--brand-2) 78%, #fff);
+    }
+
+    .pill.c3 {
+      background: color-mix(in hsl, var(--brand-3) 78%, #fff);
+    }
+
+    .pill.c4 {
+      background: color-mix(in hsl, var(--brand-4) 75%, #fff);
+    }
+
+    .pill.c5 {
+      background: color-mix(in hsl, var(--brand-5) 78%, #fff);
+    }
+
+    .pill.c6 {
+      background: color-mix(in hsl, var(--brand-6) 78%, #fff);
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-clamp: 2;
+    }
+
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-clamp: 3;
+    }
+
+    .sensitive-blur {
+      filter: blur(12px) grayscale(30%);
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--brand), var(--brand-2));
+      border-radius: 12px
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 右上角：主题 + 用户（并排固定） */
+    .top-right-stack {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 40;
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      /* 新增：让头像、文字、按钮垂直居中对齐 */
+    }
+
+    /* 右上角按钮统一高度与基线，去掉 emoji 造成的上下不齐 */
+    /* 右上角按钮：统一字号，不允许换行，保持固定高 */
+    .top-right-stack .btn {
+      height: 32px;
+      padding: 0 .8rem;
+      line-height: 1;
+      /* 防止 emoji 拉高行高 */
+      font-size: 12px;
+      /* 直接定死字号，避免 xs/sm 冲突 */
+      white-space: nowrap;
+      /* 防止“年龄设置”等在窄屏折行 */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    /* 右上角：用户入口容器 也拉成水平居中 */
+    #userEntry {
+      display: flex;
+      align-items: center;
+    }
+
+
+    /* 用户头像按钮 */
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .dark .avatar {
+      background: #1f2937;
+      color: #cbd5e1;
+    }
+
+    /* 子页面回退按钮 */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+    }
+  </style>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    // 统一成 hash 路由，避免 file:// 下的 /game/xx 解析边缘情况
+    (function normalizeRouteToHash() {
+      try {
+        const m = location.pathname.match(/\/game\/([^/?#]+)$/);
+        if (m && !location.hash) {
+          const qs = location.search || "";
+          location.replace(`#/game/${m[1]}${qs}`);
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+
+
+  <style>
+    /* ===== 背景层：两个 iframe 公用的底层样式 ===== */
+    #sakura-frame,
+    #startrail-frame {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      z-index: 0;
+      /* 不用 -1，避免被其它 fixed 层挡住事件流；反正已禁用指针 */
+      pointer-events: none;
+      /* 不拦截点击/滚动 */
+      opacity: 0;
+      /* 默认隐藏，交给主题规则控制 */
+      transition: opacity .25s ease;
+    }
+
+    /* ===== 你的原渐变背景：在 iframe 之上 ===== */
+    #bg-stack {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      /* 比 iframe 高一层 */
+      pointer-events: none;
+      opacity: 1;
+      /* 默认可见（浅色） */
+      transition: opacity .25s ease;
+    }
+
+    /* ===== 页面内容：最上层 ===== */
+    #app {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ===== 主题切换显隐规则 ===== */
+    /* 浅色：显示 sakura + 渐变；隐藏星轨 */
+    html:not(.dark) #sakura-frame {
+      opacity: 1;
+    }
+
+    html:not(.dark) #bg-stack {
+      opacity: 1;
+    }
+
+    html:not(.dark) #startrail-frame {
+      opacity: 0;
+    }
+
+    /* 暗色：显示星轨；隐藏 sakura 与渐变 */
+    .dark #startrail-frame {
+      opacity: 1;
+    }
+
+    .dark #sakura-frame {
+      opacity: 0;
+    }
+
+    .dark #bg-stack {
+      opacity: 0;
+    }
+  </style>
+
+  <style>
+    /* 首帧：跟随系统；等 JS 接管后再精细控制 */
+    @media (prefers-color-scheme: dark) {
+      #sakura-frame {
+        opacity: 0
+      }
+
+      #startrail-frame {
+        opacity: 1
+      }
+
+      #bg-stack {
+        opacity: 0
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      #sakura-frame {
+        opacity: 1
+      }
+
+      #startrail-frame {
+        opacity: 0
+      }
+
+      #bg-stack {
+        opacity: 1
+      }
+    }
+  </style>
+  <script>
+    (function () {
+      var KEY = 'theme';
+      var pref = localStorage.getItem(KEY) || 'system';
+      var isSysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var useDark = (pref === 'dark') || (pref === 'system' && isSysDark);
+      document.documentElement.classList.toggle('dark', useDark);
+    })();
+  </script>
+
+</head>
+
+<body class="text-slate-800 dark:text-slate-200">
+
+  <iframe id="sakura-frame" src="./sakura.html" aria-hidden="true"></iframe>
+
+
+  <iframe id="startrail-frame" src="./room_startrail.html" aria-hidden="true"></iframe>
+
+  <!-- 背景栈 -->
+  <div id="bg-stack" aria-hidden="true">
+    <div class="bg-photo"></div>
+    <div class="bg-grad"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div id="app" class="min-h-screen flex flex-col">
+
+    <!-- 顶栏（保持不动） -->
+    <header class="sticky top-0 z-30 glass soft-shadow border-b border-white/50 dark:border-slate-700/50">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+        <button @click="showNav=!showNav" class="sm:hidden btn" aria-label="菜单">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div class="flex items-center gap-2 font-semibold text-slate-900 dark:text-white">
+          <div class="w-7 h-7 rounded-xl ring-grad grid place-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3l8 4.5v9L12 21 4 16.5v-9L12 3z" />
+            </svg>
+          </div>
+          <span class="tracking-tight">Gal Library Pro</span>
+        </div>
+        <nav :class="['ml-auto sm:flex items-center gap-5 text-sm', showNav?'flex':'hidden']">
+          <a href="#/home" class="hover:text-[var(--brand)]" @click.prevent="nav('#/home')">资源</a>
+          <a href="#" class="hover:text-[var(--brand)]" @click.prevent="viewMode='timeline'">时间线</a>
+          <a href="#/home" class="hover:text-[var(--brand)]" @click.prevent="viewMode='studios'; nav('#/home')">
+            制作社图鉴
+          </a>
+          <a href="#about" class="hover:text-[var(--brand)]">关于</a>
+        </nav>
+        <div class="ml-2 flex items-center gap-2">
+          <button class="btn text-xs sm:text-sm" @click="toggleDark">
+            {{ pref==='system' ? (isDark ? '🌓 系统·暗' : '🌓 系统·浅') : (pref==='dark' ? '🌙 暗色' : '☀️ 浅色') }}
+          </button>
+
+
+          <template v-if="auth.loggedIn">
+            <div class="relative" @click.stop>
+              <button class="avatar border border-white/60 dark:border-slate-700 overflow-hidden"
+                @click="avatarOpen=!avatarOpen">
+                <img v-if="auth.user?.avatarUrl" :src="auth.user.avatarUrl" class="w-full h-full object-cover">
+                <span v-else>{{ (auth.user?.displayName||'U').slice(0,1).toUpperCase() }}</span>
+              </button>
+              <div v-show="avatarOpen"
+                class="absolute right-0 mt-2 w-44 glass border border-slate-200 dark:border-slate-700 rounded-xl p-2 soft-shadow">
+                <a href="#/profile" class="block px-3 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-white/10">我的资料</a>
+                <a href="#/favorites"
+                  class="block px-3 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-white/10">我的收藏</a>
+                <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-white/10"
+                  @click="doLogout">退出登录</button>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <a href="#/register" class="btn">注册</a>
+            <a href="#/login" class="btn">登录</a>
+          </template>
+
+          <button @click="openAgeGate=true" class="btn text-xs sm:text-sm">年龄设置</button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- 路由视图：主页/资料/收藏/登录/注册 -->
+    <section v-if="route==='/home'" class="relative">
+      <!-- 英雄区（不变） -->
+      <div class="max-w-7xl mx-auto px-4 pt-10 pb-8 sm:pt-14">
+        <div class="grid lg:grid-cols-2 gap-8 items-end">
+          <div>
+            <h1 class="text-3xl sm:text-4xl font-black leading-tight tracking-tight">Gal · 资源分享与评测库</h1>
+            <p class="mt-3 text-slate-700/90 dark:text-slate-300">下载资源 / 聚合百科 / 评测 / 公告 / 攻略等资料。未成年人请勿浏览 R-18 内容。</p>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+              <span class="pill c1"># 百科</span>
+              <span class="pill c2"># 评测</span>
+              <span class="pill c3"># 攻略</span>
+              <span class="pill c4"># 设定集</span>
+              <span class="pill c5"># OST</span>
+              <span class="pill c6"># 周边</span>
+            </div>
+          </div>
+
+          <!-- 搜索/筛选主卡 -->
+          <div class="glass soft-shadow ring-grad p-3">
+            <div class="flex items-stretch gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 my-auto text-slate-400" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M10.5 3a7.5 7.5 0 105.26 12.78l3.73 3.73a.75.75 0 101.06-1.06l-3.73-3.73A7.5 7.5 0 0010.5 3zm0 1.5a6 6 0 100 12 6 6 0 000-12z"
+                  clip-rule="evenodd" />
+              </svg>
+              <input v-model="q" @input="debouncedApply(160)" @keydown.enter.prevent="applyFilters()" type="text"
+                placeholder="搜索 标题/别名/标签（按 / 聚焦）" class="flex-1 bg-transparent outline-none text-sm" />
+
+              <select v-model="filters.platform" @change="applyFilters"
+                class="text-sm px-2 py-1.5 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent">
+                <option value="">全部平台</option>
+                <option v-for="p in platforms" :key="p" :value="p">{{ p }}</option>
+              </select>
+              <button @click="viewMode='grid'"
+                :class="['btn px-3 text-xs', viewMode==='grid'?'btn-primary':'']">网格</button>
+              <button @click="viewMode='timeline'"
+                :class="['btn px-3 text-xs', viewMode==='timeline'?'btn-primary':'']">时间线</button>
+              <button @click="viewMode='studios'"
+                :class="['btn px-3 text-xs', viewMode==='studios'?'btn-primary':'']">图鉴</button>
+              <button @click="resetFilters" class="btn text-xs">重置</button>
+            </div>
+
+            <div class="mt-3 grid grid-cols-1 lg:grid-cols-5 gap-3">
+              <select v-model="filters.sort" @change="applyFilters"
+                class="lg:col-span-1 text-sm px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent">
+                <option value="-hot">排序：热度↓</option>
+                <option value="-rating">排序：评分↓</option>
+                <option value="-date">排序：发售时间↓</option>
+                <option value="title">排序：标题A→Z</option>
+              </select>
+              <div class="lg:col-span-4 flex items-center flex-wrap gap-2">
+                <button v-for="t in tagPool" :key="t" @click="toggleTag(t)" :class="['px-3 py-1.5 rounded-full border text-sm transition',
+                    filters.tags.includes(t)
+                      ? 'border-transparent text-white bg-gradient-to-r from-[var(--brand)] via-[var(--brand-2)] to-[var(--brand-3)]'
+                      : 'border-slate-300/60 dark:border-slate-700 hover:bg-white/50 dark:hover:bg-white/5']">#{{ t
+                  }}</button>
+              </div>
+            </div>
+
+            <div
+              class="mt-3 rounded-xl p-3 border border-slate-300/60 dark:border-slate-700 bg-white/50 dark:bg-white/0">
+              <div class="flex items-center justify-between text-sm">
+                <div>年份范围：<span class="font-medium">{{ yearRange[0] }}</span> - <span class="font-medium">{{
+                    yearRange[1] }}</span></div>
+                <button class="btn text-xs px-2 py-1" @click="resetYears">重置年份</button>
+              </div>
+              <div class="mt-2">
+                <div
+                  class="h-1.5 rounded-full bg-gradient-to-r from-[var(--brand)] via-[var(--brand-2)] to-[var(--brand-3)] relative">
+                  <input type="range" :min="minYear" :max="maxYear" v-model.number="yearRange[0]"
+                    @input="fixYearOrder('min')" class="w-full absolute -top-2 opacity-70" />
+                  <input type="range" :min="minYear" :max="maxYear" v-model.number="yearRange[1]"
+                    @input="fixYearOrder('max')" class="w-full relative opacity-70" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 顶部状态 -->
+        <div class="mt-4 flex items-center justify-between">
+          <p class="text-sm text-slate-700/80 dark:text-slate-400" v-if="!ageVerified">
+            可能 R-18 封面已模糊。<button class="ml-1 underline decoration-dotted hover:text-[var(--brand)]"
+              @click="openAgeGate=true">我已年满 18 岁</button>
+          </p>
+          <div class="ml-auto text-xs text-slate-600 dark:text-slate-400" v-if="viewMode!=='studios'">共 {{ total }} 项，页
+            {{ page }} / {{ pages }}</div>
+        </div>
+      </div>
+
+      <!-- 主体（资源/时间线/图鉴） -->
+      <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 pb-16">
+          <!-- 骨架 -->
+          <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 gap-5">
+            <div v-for="n in 9" :key="n" class="card overflow-hidden">
+              <div class="aspect-[4/5] bg-slate-200/60 dark:bg-slate-800 animate-pulse"></div>
+              <div class="p-3 space-y-2">
+                <div class="h-4 bg-slate-200/70 dark:bg-slate-700 rounded"></div>
+                <div class="h-3 bg-slate-200/70 dark:bg-slate-700 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+          <template v-else-if="viewMode==='grid'">
+            <!-- 网格 -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
+              <article v-for="g in pageView" :key="g.id"
+                class="card overflow-hidden soft-shadow transition-transform duration-300 hover:-translate-y-0.5">
+                <div class="relative aspect-[4/5] bg-slate-100 dark:bg-slate-800">
+                  <img :src="coverAnime(g)" alt
+                    class="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                    :class="g.isAdult && !ageVerified ? 'sensitive-blur' : ''" loading="lazy" />
+                  <div class="absolute inset-x-3 top-3 flex gap-2">
+                    <span v-if="g.isAdult" class="pill c3 uppercase">R-18</span>
+                    <span class="pill c2 text-[10px]">{{ g.platforms.join('/') }}</span>
+                    <span class="pill c1 text-[10px]">{{ g.maker }}</span>
+                    <!-- 收藏徽标即时展示 -->
+                    <span v-if="isFav(g.id)" class="pill c4">★ 已收藏</span>
+                  </div>
+                  <div class="absolute inset-x-3 bottom-3 flex items-center justify-between text-xs">
+                    <span class="pill c4">评分 {{ g.rating.toFixed(1) }}</span>
+                    <span class="pill c1">热度 {{ g.hot }}</span>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <h3 class="font-semibold line-clamp-2 hover:underline cursor-pointer" @click="goGame(g)"
+                    @mouseenter="scheduleQuickView(g)" @mouseleave="cancelQuickView" @focus="scheduleQuickView(g)"
+                    @blur="cancelQuickView" tabindex="0">{{ g.title }}</h3>
+
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">发售：{{ fmtDate(g.releaseDate) }}</p>
+                  <p class="text-sm text-slate-700 dark:text-slate-300 mt-2 line-clamp-3">{{ g.desc }}</p>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <span v-for="t in g.tags" :key="t"
+                      class="text-[11px] px-2 py-0.5 rounded-full border border-slate-300/60 dark:border-slate-700">#{{
+                      t }}</span>
+                  </div>
+                  <div class="mt-4 grid grid-cols-3 gap-2">
+                    <button class="btn text-sm" @click="goGame(g,'resources')">资源</button>
+                    <button class="btn text-sm" @click="goGame(g)">详情</button>
+                    <button class="btn text-sm" :class="isFav(g.id)?'btn-primary':''" @click="toggleFav(g)">{{
+                      isFav(g.id)?'★ 已收藏':'☆ 收藏' }}</button>
+
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- 数字分页 -->
+            <div v-if="pages>1" class="mt-8 flex items-center justify-center gap-2 flex-wrap">
+              <button class="btn" :disabled="page<=1" @click="toPage(page-1)">上一页</button>
+              <button v-for="n in pageNumbers" :key="n.key" class="btn" :class="n.num===page ? 'btn-primary' : ''"
+                :disabled="n.num==='…'" @click="typeof n.num==='number' && toPage(n.num)">{{ n.num }}</button>
+              <button class="btn" :disabled="page>=pages" @click="toPage(page+1)">下一页</button>
+            </div>
+          </template>
+          <!-- 时间线 -->
+          <div v-else-if="viewMode==='timeline'">
+            <div v-for="year in timelineYears" :key="year" class="mb-6">
+              <div v-for="g in timelineMap[year]" :key="g.id" class="card soft-shadow p-3 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-[var(--brand)] shadow-[0_0_0_4px_rgba(52,198,207,.2)]"></div>
+                <img :src="coverAnime(g)" alt
+                  class="w-16 h-20 object-cover rounded-md border border-slate-300/60 dark:border-slate-700"
+                  :class="g.isAdult && !ageVerified ? 'sensitive-blur':''" loading="lazy">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <p class="font-semibold line-clamp-1 hover:underline cursor-pointer" @click="goGame(g)"
+                      @mouseenter="scheduleQuickView(g)" @mouseleave="cancelQuickView" @focus="scheduleQuickView(g)"
+                      @blur="cancelQuickView" tabindex="0">{{ g.title }}</p>
+                    <span v-if="g.isAdult" class="pill c3 uppercase">R-18</span>
+                    <span class="pill c2 text-[10px]">{{ g.platforms.join('/') }}</span>
+                    <span class="pill c1 text-[10px]">{{ g.maker }}</span>
+                    <span v-if="isFav(g.id)" class="pill c4">★ 已收藏</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5">发售：{{ fmtDate(g.releaseDate) }} · 评分 {{ g.rating.toFixed(1)
+                    }} · 热度 {{ g.hot }}</p>
+                  <p class="text-sm text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">{{ g.desc }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="btn text-xs" @click="goGame(g,'resources')">资源</button>
+                  <button class="btn text-xs" @click="goGame(g)">详情</button>
+                  <button class="btn text-xs" :class="isFav(g.id)?'btn-primary':''" @click="toggleFav(g)">{{
+                    isFav(g.id)?'★ 已收藏':'☆ 收藏' }}</button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 text-center">
+              <a href="#/home" class="btn btn-primary">回到顶部</a>
+            </div>
+          </div>
+
+
+          <!-- 制作社图鉴 -->
+          <div v-else-if="viewMode==='studios'" class="space-y-6">
+            <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <h3 class="font-bold text-lg">制作社图鉴</h3>
+                <div class="flex items-center gap-2">
+                  <input v-model.trim="studioQ" placeholder="搜索制作社 / 人物 / 作品"
+                    class="px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+                  <select v-model="studioSort"
+                    class="px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm">
+                    <option value="name">按名称</option>
+                    <option value="founded">按成立时间</option>
+                    <option value="works">按代表作数量</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <article v-for="(m, name) in studioView" :key="name" class="card soft-shadow overflow-hidden">
+                <div class="relative aspect-[5/2] bg-slate-100 dark:bg-slate-800">
+                  <img :src="bannerCandidates(name, m)[0]" :data-idx="0" class="w-full h-full object-cover"
+                    alt="studio-banner" @error="(e)=>{
+    const c = bannerCandidates(name, m);
+    let i = Number(e.target.dataset.idx || 0) + 1;
+    if (i < c.length){ e.target.dataset.idx = i; e.target.src = c[i]; }
+  }" />
+
+                  <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                    <span class="pill c4">成立 {{ m.founded || '—' }}</span>
+                    <span class="pill c1">{{ m.works?.length || 0 }} 部代表作</span>
+                  </div>
+                  <!-- 收藏徽标 -->
+                  <div class="absolute top-2 left-2">
+                    <span v-if="isFavStudio(name)" class="pill c5">★ 已收藏</span>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <h4 class="font-semibold">{{ name }}</h4>
+                  <p class="text-sm text-slate-700 dark:text-slate-300 mt-1 line-clamp-3">{{ m.intro || '暂无简介' }}</p>
+
+                  <div class="mt-3">
+                    <div class="flex gap-2 text-xs">
+                      <button @click="m._tab='intro'; $forceUpdate()"
+                        :class="['btn px-2 py-1', (m._tab||'intro')==='intro' ? 'btn-primary':'' ]">简介</button>
+                      <button @click="m._tab='people'; $forceUpdate()"
+                        :class="['btn px-2 py-1', (m._tab||'intro')==='people' ? 'btn-primary':'' ]">主要人物</button>
+                      <button @click="m._tab='works'; $forceUpdate()"
+                        :class="['btn px-2 py-1', (m._tab||'intro')==='works' ? 'btn-primary':'' ]">代表作</button>
+                      <button @click="toggleFavStudio(name)" class="btn px-2 py-1"
+                        :class="isFavStudio(name)?'btn-primary':''">{{ isFavStudio(name)?'★ 已藏':'☆ 收藏' }}</button>
+                    </div>
+                    <div class="mt-2 text-sm">
+                      <template v-if="(m._tab||'intro')==='intro'">
+                        <p class="text-slate-700 dark:text-slate-300">{{ m.intro || '暂无简介' }}</p>
+                      </template>
+                      <template v-else-if="m._tab==='people'">
+                        <ul class="list-disc ml-5 space-y-1">
+                          <li v-for="p in (m.people||['—'])" :key="p">{{ p }}</li>
+                        </ul>
+                      </template>
+                      <template v-else>
+                        <ul class="list-disc ml-5 space-y-1">
+                          <li v-for="w in (m.works||['—'])" :key="w">{{ w }}</li>
+                        </ul>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <!-- 无结果 -->
+          <div v-if="!loading && total===0 && viewMode==='grid'" class="text-center py-20 text-slate-500">
+            没有结果，换个关键词或筛选试试～</div>
+
+          <!-- ======= 新增：主页讨论区 ======= -->
+          <div class="mt-14">
+            <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg">讨论区</h3>
+                <button class="btn text-xs" @click="seedDemoPosts">生成几条示例</button>
+              </div>
+              <!-- 发帖 -->
+              <div class="mt-3 grid gap-2 sm:grid-cols-6">
+                <input v-model.trim="forumDraft.title"
+                  class="sm:col-span-2 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none"
+                  placeholder="标题（可选）">
+                <input v-model.trim="forumDraft.content"
+                  class="sm:col-span-3 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none"
+                  placeholder="说点什么…">
+                <button class="btn btn-primary sm:col-span-1" @click="postToForum">发布</button>
+              </div>
+              <!-- 列表 -->
+              <div class="mt-4 space-y-3">
+                <div v-for="p in forumPostsSorted" :key="p.id" class="card p-3">
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <div class="flex items-center gap-2">
+                      <span class="avatar w-6 h-6 text-[10px]">{{ (p.user?.name||'U').slice(0,1).toUpperCase() }}</span>
+                      <span class="font-medium text-slate-700 dark:text-slate-300">{{ p.user?.name || '匿名' }}</span>
+                    </div>
+                    <span>{{ fmtTime(p.ts) }}</span>
+                  </div>
+                  <div class="mt-1">
+                    <p class="font-semibold" v-if="p.title">{{ p.title }}</p>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ p.content }}</p>
+                  </div>
+                  <div class="mt-2 flex items-center gap-2 text-xs">
+                    <button class="btn px-2 py-1" @click="likePost(p.id)">👍 {{ p.likes||0 }}</button>
+                  </div>
+                </div>
+                <div v-if="forumPosts.length===0" class="text-sm text-slate-500">还没有讨论，来发第一条吧～</div>
+              </div>
+            </div>
+          </div>
+          <!-- ======= /讨论区 ======= -->
+
+        </div>
+      </main>
+    </section>
+
+
+
+
+
+
+
+    <!-- ========== 游戏子页面 ========== -->
+    <section v-else-if="route.startsWith('/game/')" class="max-w-6xl mx-auto px-4 py-6">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+
+      <div v-if="currentGame" class="grid md:grid-cols-2 gap-5">
+        <!-- 封面图 -->
+        <div class="card soft-shadow p-3">
+          <img :src="coverAnime(currentGame)" class="w-full h-full object-cover rounded-xl aspect-[4/5]"
+            :class="currentGame.isAdult && !ageVerified ? 'sensitive-blur' : ''" />
+        </div>
+
+        <!-- 标题 + 元信息 + 收藏/快速预览（可保留） -->
+        <div class="card soft-shadow p-4">
+          <h2 class="text-2xl font-black tracking-tight">{{ currentGame.title }}</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            发售：{{ fmtDate(currentGame.releaseDate) }} · 平台：{{ currentGame.platforms.join('/') }}
+          </p>
+          <p class="text-sm text-[var(--brand)] mt-1">
+            制作社：<span class="cursor-pointer hover:underline"
+              @click="viewMode='studios'; quickView=null;nav('#/home')">{{
+              currentGame.maker }}</span>
+          </p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <span v-for="t in currentGame.tags" :key="t" class="pill c1 text-[11px]">{{ t }}</span>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button class="btn" :class="isFav(currentGame.id)?'btn-primary':''" @click="toggleFav(currentGame)">
+              {{ isFav(currentGame.id)?'★ 已藏':'☆ 收藏' }}
+            </button>
+            <button class="btn" @click="window.scrollTo({top:0,behavior:'smooth'})">回到顶部</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 介绍 -->
+      <div v-if="currentGame" class="card soft-shadow p-4 mt-5">
+        <h3 class="font-semibold">游戏介绍</h3>
+        <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">{{ currentGame.desc }}</p>
+      </div>
+
+
+      <!-- 作品画廊 -->
+      <div v-if="currentGame?.gallery?.length" class="card soft-shadow p-4 mt-5">
+        <h3 class="font-semibold">画廊</h3>
+        <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          <img v-for="(s,i) in currentGame.gallery" :key="i" :src="s"
+            class="w-full h-28 sm:h-32 object-cover rounded border border-slate-300/60 dark:border-slate-700"
+            loading="lazy" />
+        </div>
+      </div>
+
+
+      <!-- 宣传视频 -->
+      <!-- <div v-if="currentGame" class="card soft-shadow p-4 mt-5">
+        <h3 class="font-semibold">宣传视频</h3>
+        <video v-if="currentGame.video" class="w-full rounded-xl mt-2" controls :src="currentGame.video"></video>
+        <p v-else class="text-sm text-slate-500 mt-2">暂无视频</p>
+      </div> -->
+      <!-- 宣传视频 -->
+<div v-if="currentGame" class="card soft-shadow p-4 mt-5">
+  <h3 class="font-semibold">宣传视频</h3>
+
+  <!-- 能识别为 B 站则内嵌播放 -->
+  <div v-if="embedUrl(currentGame.video)" class="aspect-video mt-2">
+    <iframe :src="embedUrl(currentGame.video)"
+      allow="autoplay; encrypted-media; picture-in-picture"
+      referrerpolicy="no-referrer"
+      loading="lazy" frameborder="0" allowfullscreen
+      class="w-full h-full"></iframe>
+  </div>
+
+  <!-- 否则若是直链媒体文件再用 <video> 播放 -->
+  <video v-else-if="isMediaFile(currentGame.video)"
+         class="w-full rounded-xl mt-2" controls autoplay muted playsinline
+         :src="currentGame.video"></video>
+
+  <p v-else class="text-sm text-slate-500 mt-2">暂无视频</p>
+</div>
+
+
+      <!-- 资源链接（锚点：resources） -->
+      <div v-if="currentGame" id="resources" class="card soft-shadow p-4 mt-5">
+        <h3 class="font-semibold">资源链接</h3>
+        <div class="mt-3 grid sm:grid-cols-2 gap-3">
+          <a :href="currentGame.official||'#'" target="_blank"
+            :class="['btn text-sm', (currentGame.official?'btn-primary':'') ]">官方链接</a>
+          <a v-if="!(currentGame.isAdult && !ageVerified)" :href="currentGame.resource||'#'" target="_blank"
+            rel="noopener noreferrer" class="btn text-sm">资源链接</a>
+          <button v-else class="btn text-sm" @click="openAgeGate=true">资源链接（需满18）</button>
+
+        </div>
+        <p class="text-xs text-slate-500 mt-2">* 示例地址，请替换为真实链接。</p>
+      </div>
+
+
+      <!-- 评论区 -->
+      <div v-if="currentGame" class="card soft-shadow p-4 mt-5">
+        <h3 class="font-semibold">评论</h3>
+        <div class="mt-2 grid grid-cols-5 gap-2">
+          <input v-model.trim="commentDraft[currentGame.id]" placeholder="写下评论…"
+            class="col-span-4 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <button class="btn btn-primary col-span-1" @click="submitComment(currentGame.id)">发布</button>
+        </div>
+        <div class="mt-3 space-y-2">
+          <div v-for="c in commentsBy(currentGame.id)" :key="c.id" class="card p-2">
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <div class="flex items-center gap-2">
+                <span class="avatar w-6 h-6 text-[10px]">{{ (c.user?.name||'U').slice(0,1).toUpperCase() }}</span>
+                <span class="font-medium text-slate-700 dark:text-slate-300">{{ c.user?.name||'匿名' }}</span>
+              </div>
+              <span>{{ fmtTime(c.ts) }}</span>
+            </div>
+            <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap mt-1">{{ c.text }}</p>
+          </div>
+          <p v-if="commentsBy(currentGame.id).length===0" class="text-xs text-slate-500">暂无评论，来占个沙发吧～</p>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- ========== 资料页 ========== -->
+    <section v-else-if="route==='/profile'" class="max-w-3xl mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <h2 class="text-xl font-bold">我的资料</h2>
+        <div class="mt-4 grid sm:grid-cols-3 gap-3">
+          <div class="sm:row-span-2">
+            <div class="avatar w-20 h-20 text-2xl overflow-hidden">
+              <img v-if="profile.avatar" :src="profile.avatar" class="w-full h-full object-cover" />
+              <span v-else>{{ (profile.name||'U').slice(0,1).toUpperCase() }}</span>
+            </div>
+            <label class="btn mt-2 inline-block">
+              上传头像
+              <input type="file" accept="image/*" class="hidden" @change="uploadAvatar">
+            </label>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-sm">昵称</label>
+            <input v-model.trim="profile.name"
+              class="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-sm">简介</label>
+            <textarea v-model.trim="profile.bio" rows="3"
+              class="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none"></textarea>
+          </div>
+          <div class="sm:col-span-2">
+            <button class="btn btn-primary" @click="saveProfile">保存资料</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 收藏页 ========== -->
+    <section v-else-if="route==='/favorites'" class="max-w-5xl mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">我的收藏</h2>
+          <div class="flex gap-2">
+            <input v-model.trim="favQ" placeholder="搜索收藏…"
+              class="px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+            <button class="btn text-xs" @click="clearFavs">清空</button>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="font-semibold">游戏</h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+            <div v-for="g in favGamesView" :key="g.id" class="card p-3 flex gap-3">
+              <img :src="coverAnime(g)" class="w-20 h-24 object-cover rounded" />
+              <div class="flex-1">
+                <p class="font-semibold line-clamp-1 hover:underline cursor-pointer" @click="goGame(g)">{{ g.title }}
+                </p>
+
+                <p class="text-xs text-slate-500">平台：{{ g.platforms.join('/') }} · 评分 {{ g.rating }}</p>
+                <div class="mt-1 flex gap-2">
+                  <button class="btn text-xs" @click="goGame(g)">详情</button>
+
+                  <button class="btn text-xs" @click="toggleFav(g)">取消</button>
+                </div>
+              </div>
+            </div>
+            <p v-if="favGamesView.length===0" class="text-sm text-slate-500">没有收藏的游戏</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="font-semibold">制作社</h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+            <div v-for="name in favStudiosView" :key="name" class="card p-3">
+              <p class="font-semibold">{{ name }}</p>
+              <div class="mt-2 flex gap-2">
+                <button class="btn text-xs" @click="viewMode='studios'; nav('#/home')">去图鉴看</button>
+                <button class="btn text-xs" @click="toggleFavStudio(name)">取消</button>
+              </div>
+            </div>
+            <p v-if="favStudiosView.length===0" class="text-sm text-slate-500">没有收藏的制作社</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 登录 ========== -->
+    <section v-else-if="route==='/login'" class="max-w-md mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <h2 class="text-xl font-bold">登录</h2>
+        <div class="mt-3 space-y-3">
+          <input v-model.trim="authLogin.email" type="email" placeholder="邮箱"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <input v-model.trim="authLogin.password" type="password" placeholder="密码"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <button class="btn btn-primary w-full" @click="doLogin">登录</button>
+          <p class="text-xs text-slate-500">
+            没有账号？<a href="#/register" class="underline">去注册</a> ·
+            <a href="#/forgot" class="underline">忘记密码</a>
+          </p>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 注册 ========== -->
+    <section v-else-if="route==='/register'" class="max-w-md mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <h2 class="text-xl font-bold">注册</h2>
+        <div class="mt-3 space-y-3">
+          <input v-model.trim="authReg.name" placeholder="昵称"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <input v-model.trim="authReg.email" type="email" placeholder="邮箱"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <input v-model.trim="authReg.password" type="password" placeholder="密码"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <button type="button" class="btn btn-primary w-full"
+            :disabled="!authReg.name || !authReg.email || !authReg.password || !isEmailVerified(authReg.email)"
+            @click="doRegister">注册并登录</button>
+
+          <!-- 注册：邮箱验证码 -->
+          <div class="mt-3 p-3 rounded-xl border border-slate-300/60 dark:border-slate-700/60">
+            <p class="text-sm mb-2">推荐：先验证邮箱再注册</p>
+            <div class="flex gap-2 items-center">
+              <button class="btn text-xs" :disabled="otpCooldown>0 || !authReg.email" @click="requestVerifyCode">
+                {{ otpCooldown>0 ? `重新发送(${otpCooldown}s)` : '发送验证码' }}
+              </button>
+              <input v-model.trim="verifyCode" maxlength="6" placeholder="输入 6 位验证码"
+                class="flex-1 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+              <button class="btn btn-primary text-xs" :disabled="verifyCode.length!==6 || !authReg.email"
+                @click="submitVerifyCode">
+                提交验证
+              </button>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              * 验证成功后，直接点“注册并登录”即可完成注册。
+            </p>
+          </div>
+
+          <p class="text-xs text-slate-500">已有账号？<a href="#/login" class="underline">去登录</a></p>
+        </div>
+      </div>
+    </section>
+    <!-- 忘记密码：填写邮箱 -->
+    <section v-else-if="route==='/forgot'" class="max-w-md mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <h2 class="text-xl font-bold">找回密码</h2>
+        <div class="mt-3 space-y-3">
+          <input v-model.trim="resetEmail" type="email" placeholder="注册邮箱"
+            class="w-full px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+          <button class="btn btn-primary w-full" @click="requestResetCode">发送重置邮件</button>
+
+          <!-- 忘记密码：使用验证码重置 -->
+          <div class="mt-6 p-3 rounded-xl border border-slate-300/60 dark:border-slate-700/60">
+            <p class="text-sm mb-2">或：使用邮箱验证码重置密码</p>
+            <div class="space-y-2">
+              <div class="flex gap-2">
+                <input v-model.trim="resetEmail" type="email" placeholder="注册邮箱"
+                  class="flex-1 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+                <button class="btn text-xs" :disabled="otpCooldown>0 || !resetEmail" @click="requestResetCode">
+                  {{ otpCooldown>0 ? `重新发送(${otpCooldown}s)` : '发送验证码' }}
+                </button>
+              </div>
+              <div class="flex gap-2">
+                <input v-model.trim="resetCode" maxlength="6" placeholder="验证码"
+                  class="w-32 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-white/70 dark:bg-white/10 text-sm outline-none" />
+                <input v-model.trim="newPassword" type="password" placeholder="新密码"
+                  class="flex-1 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-white/70 dark:bg-white/10 text-sm outline-none" />
+                <button class="btn btn-primary text-xs" :disabled="!resetEmail || resetCode.length!==6 || !newPassword"
+                  @click="resetByCode">
+                  用验证码重置
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-500">已收到邮件？点击邮箱中的链接继续。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 邮箱验证落地：带 token -->
+    <section v-else-if="route.startsWith('/verify')" class="max-w-md mx-auto px-4 py-8">
+      <a href="#/home" class="back-link btn mb-4">← 回到主页</a>
+      <div class="glass soft-shadow ring-grad p-4 rounded-2xl">
+        <h2 class="text-xl font-bold">验证邮箱</h2>
+        <p class="mt-2 text-sm">正在验证中…</p>
+      </div>
+    </section>
+
+    <!-- 页脚（保持不动） -->
+    <footer id="about" class="mt-auto glass soft-shadow border-t border-white/50 dark:border-slate-700/50">
+      <div class="max-w-7xl mx-auto px-4 py-8 grid gap-4 md:grid-cols-2 text-sm text-slate-700/90 dark:text-slate-400">
+        <div>
+          <p class="font-semibold text-slate-900 dark:text-white">合规与声明</p>
+          <p class="mt-2">本页面为资源分享站点，仅聚合百科/评测/公告/攻略等资料，不开发任何、破解或侵权资源。若有权利问题，请通过 QQ 邮箱联系：1543252798@@qq.com。</p>
+        </div>
+        <div>
+          <p class="font-semibold text-slate-900 dark:text-white">开源与技术</p>
+          <p class="mt-2">前端：Vue 3 + Tailwind；感谢BiliBili,AcgDOG,vndb,Bangumi等提供的相关资源和信息，也感谢Key,Innocent Grey,TYPE-MOON,MIONORI等制作社的优质作品，同时感谢所有热爱Gal的Users和对此网站支持。</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- 年龄验证 -->
+    <div v-if="openAgeGate" class="fixed inset-0 z-40 bg-black/50 grid place-items-center p-4"
+      @keydown.escape="openAgeGate=false">
+      <div class="glass max-w-md w-full rounded-2xl p-5 soft-shadow">
+        <h3 class="text-lg font-semibold">年龄验证</h3>
+        <p class="text-sm text-slate-700/90 dark:text-slate-400 mt-1">本站含 R-18 作品资料。若你已年满 18 岁，可继续浏览并显示相关内容。</p>
+        <div class="mt-4 flex items-center gap-3">
+          <button @click="confirmAdult(true)" class="btn btn-primary flex-1">我已年满 18 岁</button>
+          <button @click="confirmAdult(false)" class="btn flex-1">仍以未成年视图浏览</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快速详情 + 评论区 -->
+    <div v-if="quickView" class="fixed inset-0 z-40 bg-black/50 grid place-items-center p-4"
+      @click.self="quickView=null" @keydown.escape="quickView=null">
+      <div class="glass max-w-3xl w-full rounded-2xl overflow-hidden soft-shadow">
+        <div class="grid grid-cols-1 md:grid-cols-2">
+          <div class="relative bg-slate-100 dark:bg-slate-800">
+            <img :src="coverAnime(quickView)" class="block   w-full  object-cover aspect-[4/5]"
+              :class="quickView.isAdult && !ageVerified ? 'sensitive-blur' : ''" loading="lazy" />
+            <div class="p-2">
+              <div class="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(6rem,1fr))]">
+                <img v-for="(s,i) in quickView.gallery || []" :key="i" :src="s"
+                  class="h-16 w-full object-cover rounded border border-slate-300/60 dark:border-slate-700" />
+              </div>
+            </div>
+
+          </div>
+          <div class="p-4">
+            <h3 class="text-xl font-bold">{{ quickView.title }}</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">发售：{{ fmtDate(quickView.releaseDate) }} · 平台：{{
+              quickView.platforms.join('/') }}</p>
+            <p class="text-sm text-[var(--brand)] mt-1">制作社：<span class="cursor-pointer hover:underline"
+                @click="viewMode='studios'; quickView=null; nav('#/home')">{{ quickView.maker }}</span></p>
+            <p class="mt-2 text-sm text-slate-700 dark:text-slate-300">{{ quickView.desc }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span v-for="t in quickView.tags" :key="t"
+                class="text-[11px] px-2 py-0.5 rounded-full border border-slate-300/60 dark:border-slate-700">#{{ t
+                }}</span>
+            </div>
+            <div class="mt-4">
+              <p class="text-sm mb-1">你的评分：</p>
+              <div class="flex items-center gap-1">
+                <button v-for="s in 10" :key="s" @click="rate(quickView.id, s)" class="text-lg">{{ getRate(quickView.id)
+                  >= s ? '★' : '☆' }}</button>
+                <span class="ml-2 text-xs text-slate-500">已存本地</span>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-2">
+              <button class="btn" @click="goGame(quickView,'resources'); quickView=null">资源</button>
+              <button class="btn" @click="quickView=null">关闭</button>
+              <button class="btn" :class="isFav(quickView.id)?'btn-primary':''" @click="toggleFav(quickView)">{{
+                isFav(quickView.id)?'★ 已藏':'☆ 收藏' }}</button>
+            </div>
+            <!-- 评论区 -->
+            <div class="mt-5">
+              <h4 class="font-semibold text-sm">评论</h4>
+              <div class="mt-2 grid grid-cols-5 gap-2">
+                <input v-model.trim="commentDraft[quickView.id]" placeholder="写下评论…"
+                  class="col-span-4 px-3 py-2 rounded-lg border border-slate-300/60 dark:border-slate-700 bg-transparent text-sm outline-none" />
+                <button class="btn btn-primary col-span-1" @click="submitComment(quickView.id)">发布</button>
+              </div>
+              <div class="mt-3 space-y-2 max-h-56 overflow-y-auto pr-1">
+                <div v-for="c in commentsBy(quickView.id)" :key="c.id" class="card p-2">
+                  <div class="flex items-center justify-between text-xs text-slate-500">
+                    <div class="flex items-center gap-2">
+                      <span class="avatar w-6 h-6 text-[10px]">{{ (c.user?.name||'U').slice(0,1).toUpperCase() }}</span>
+                      <span class="font-medium text-slate-700 dark:text-slate-300">{{ c.user?.name||'匿名' }}</span>
+                    </div>
+                    <span>{{ fmtTime(c.ts) }}</span>
+                  </div>
+                  <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap mt-1">{{ c.text }}</p>
+                </div>
+                <p v-if="commentsBy(quickView.id).length===0" class="text-xs text-slate-500">暂无评论，来占个沙发吧～</p>
+              </div>
+            </div>
+            <!-- /评论区 -->
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <script>
+    const { createApp, ref, computed, onMounted, watch } = Vue;
+
+    /* 背景图片（可替换成你的 ACG CDN） */
+    const BG_IMAGES = [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1511185307590-3c29c1122f83?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop"
+    ];
+
+
+
+    function pickBgOnce() {
+      const saved = localStorage.getItem('bg_pick');
+      if (saved) return saved;
+      const pick = BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
+      localStorage.setItem('bg_pick', pick);
+      return pick;
+    }
+    function applyBg(url) {
+      document.documentElement.style.setProperty('--photo-url', `url("${url}")`);
+    }
+    function changeBackground() {
+      localStorage.removeItem('bg_pick');
+      const next = pickBgOnce();
+      applyBg(next);
+      // 触发一次滚动计算，立刻刷新渐变
+      window.dispatchEvent(new Event('scroll'));
+    }
+
+
+
+    function mountDynamicBackground() {
+      //关键：真正设置背景，并确保刷新/切页一致
+      //applyBg(pickBgOnce());
+
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const h = document.documentElement;
+        const max = Math.max(1, h.scrollHeight - h.clientHeight);
+        const p = Math.min(1, Math.max(0, window.scrollY / max)); // 0~1
+        const p2 = (Math.sin(p * Math.PI) + 1) / 2; // 中段增强
+        const p3 = (Math.cos(p * Math.PI * 1.5) + 1) / 2; // 节奏层次
+        const x1 = 18 + 36 * p;
+        const y1 = -8 + 32 * p;
+        const x2 = 84 - 26 * p;
+        const y2 = 2 + 20 * p2;
+        const a1 = 110 + 180 * p;
+        const a2 = 200 + 210 * p3;
+        const root = document.documentElement.style;
+        root.setProperty('--p', p.toFixed(4));
+        root.setProperty('--x1', x1 + '%');
+        root.setProperty('--y1', y1 + '%');
+        root.setProperty('--x2', x2 + '%');
+        root.setProperty('--y2', y2 + '%');
+        root.setProperty('--a1', a1 + 'deg');
+        root.setProperty('--a2', a2 + 'deg');
+      };
+      window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+      update();
+    }
+
+
+    /* 制作社图鉴（可继续扩展） */
+    const STUDIOS = {
+      "Innocent Grey": {
+        founded: "2004",
+        intro: "以悬疑/推理与成人题材见长，氛围阴翳，美术精致写实，擅长黑暗群像与昭和背景。",
+        people: ["杉菜水姬（原画）", "しまどりる（剧本参与）"],
+        works: ["殻ノ少女", "Cartagra", "FLOWERS 系列"]
+      },
+      "Key": {
+        founded: "1998",
+        intro: "“泪目系”标志品牌，以温情与治愈见长，音乐/演出感染力强，群像塑造立体。",
+        people: ["麻枝准（剧本/曲）", "Na-Ga（原画）"],
+        works: ["CLANNAD", "Little Busters!", "Rewrite"]
+      },
+      "TYPE-MOON": {
+        founded: "2000",
+        intro: "宏大奇幻设定与世界观塑造，人物群像鲜明，跨媒介影响力强。",
+        people: ["奈须蘑菇（剧本）", "武内崇（原画）"],
+        works: ["Fate/stay night", "月姬", "空之境界（相关）"]
+      },
+      "Nitroplus": {
+        founded: "2000",
+        intro: "黑暗科幻、暴力美学、与实验性叙事并重。",
+        people: ["虚渊玄", "石渡マコト"],
+        works: ["装甲恶鬼村正", "Phantom", "STEINS;GATE（协力）"]
+      },
+      "Frontwing": {
+        founded: "1999",
+        intro: "商业化程度高的品牌，代表作为《灰色》系列。",
+        people: ["渡边明夫（合作）", "藤崎由爱（合作）"],
+        works: ["灰色的果实/迷宫/乐园"]
+      },
+      "minori": {
+        founded: "2001",
+        intro: "画面演出和美术极为精致，已停止活动但作品影响深远。",
+        people: ["酒井伸和", "御影"],
+        works: ["ef - a fairy tale of the two.", "eden*", "はるのあしおと"]
+      },
+      "Alicesoft": {
+        founded: "1989",
+        intro: "历史悠久的成人向品牌，战斗与经营系统见长。",
+        people: ["おにぎりくん", "雷太"],
+        works: ["兰斯系列", "大帝国", "超昂天使"]
+      }
+    };
+
+    /* 占位封面（上线换你的 CDN） */
+    const coverAnimeUrl = (text) => `https://placehold.co/640x800/png?font=roboto&text=${encodeURIComponent(text)}&background=111827&foreground=ffffff`;
+    const bannerAnimeUrl = (text) => `https://placehold.co/1200x480/png?font=roboto&text=${encodeURIComponent(text)}&background=0b1324&foreground=ffffff`;
+    const galleryAnimeUrl = (text) => `https://placehold.co/640x360/png?font=roboto&text=${encodeURIComponent(text)}&background=0f172a&foreground=ffffff`;
+
+
+    /* 讨论区/评论 的简易 id */
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    createApp({
+      setup() {
+        // === 放在 setup() 顶部、和 otpCooldown/otpTimer 同一作用域 ===
+        function startOtpCooldown(sec = 60) {
+          otpCooldown.value = sec;
+          clearInterval(otpTimer);
+          otpTimer = setInterval(() => {
+            otpCooldown.value--;
+            if (otpCooldown.value <= 0) { clearInterval(otpTimer); otpTimer = null; }
+          }, 1000);
+        }
+
+        const avatarOpen = ref(false);
+        document.addEventListener('click', () => (avatarOpen.value = false));
+
+        // 放在 setup() 顶部其它 ref 旁边
+        const verifiedEmails = ref(new Set(JSON.parse(localStorage.getItem('otp_verified') || '[]')));
+        function isEmailVerified(email) {
+          return !!email && verifiedEmails.value.has(email.trim().toLowerCase());
+        }
+        function markEmailVerified(email) {
+          if (!email) return;
+          verifiedEmails.value.add(email.trim().toLowerCase());
+          localStorage.setItem('otp_verified', JSON.stringify([...verifiedEmails.value]));
+        }
+
+
+
+        const fuse = ref(null);         // Fuse 实例
+        let searchDebounce = null;      // 防抖计时器
+
+        function debouncedApply(delay = 160) {
+          if (searchDebounce) clearTimeout(searchDebounce);
+          searchDebounce = setTimeout(() => applyFilters(), delay);
+        }
+        function firstCoverOf(name) {
+          const g = source.value.find(x => (x.maker || '').trim() === name.trim() && x.coverUrl);
+          return g?.coverUrl || '';
+        }
+
+        // 轻路由
+        function getRoute() {
+          // 优先用 hash（#/game/f8）
+          if (location.hash) return location.hash.slice(1);
+
+          // 兜底：兼容无 hash 的 /game/ID
+          const m = location.pathname.match(/\/game\/([^/]+)$/);
+          return m ? `/game/${m[1]}` : '/home';
+        }
+
+        const route = ref(getRoute());
+
+        function syncRoute() { route.value = getRoute(); }
+        window.addEventListener('hashchange', syncRoute);
+        window.addEventListener('popstate', syncRoute);
+        window.addEventListener('popstate', scrollIfAnchor, { passive: true });
+
+
+        // 取路由参数，如 /game/f3 -> id=f3
+        function routeParam() {
+          // 形如 "#/game/f8?to=resources"
+          let raw = location.hash;
+
+          // 无 hash：从 pathname + search 兜底，并把它“转成”等价的 hash 形式
+          if (!raw) {
+            const m = location.pathname.match(/\/game\/([^/?#]+)$/);
+            const search = location.search.replace(/^\?/, ''); // 兼容 ?to=resources
+            raw = m ? `#/game/${m[1]}${search ? `?${search}` : ''}` : '#/home';
+          }
+
+          const [path, query = ''] = raw.slice(1).split('?');
+          const parts = path.split('/'); // ["", "game", "f8"]
+          const q = Object.fromEntries(new URLSearchParams(query));
+          return { parts, q };
+        }
+
+        function nav(hash) { location.hash = hash; }
+
+
+        const currentGame = computed(() => {
+          const { parts } = routeParam();      // <- 用你的解析函数
+          if (parts[1] !== 'game') return null;
+          const id = parts[2];                 // 已经是“f8”，不会带 ?to=resources
+          return source.value.find(g => g.id === id) || null;
+        });
+
+
+        // 跳到子页面（可带锚点：'resources'）
+        function goGame(g, anchor) {
+          const id = typeof g === 'string' ? g : g.id;
+          const q = anchor ? (`?to=${anchor}`) : '';
+          nav(`#/game/${id}${q}`);
+        }
+
+
+
+
+        // 用户 & Auth
+        const user = ref(JSON.parse(localStorage.getItem('gl_user') || 'null')); // {email, name, avatar, bio}
+        const profile = ref({ name: user.value?.name || 'User', bio: user.value?.bio || '', avatar: user.value?.avatar || '' });
+        const isLoggedIn = computed(() => !!user.value);
+
+        // 顶部右侧用户入口（DOM直控）
+        function refreshUserEntry() {
+          const out = document.getElementById('userLoggedOut');
+          const inx = document.getElementById('userLoggedIn');
+          if (!out || !inx) return;
+          if (isLoggedIn.value) {
+            out.classList.add('hidden'); inx.classList.remove('hidden');
+            const img = document.getElementById('avatarImg');
+            const ini = document.getElementById('avatarInitial');
+            if (user.value?.avatar) {
+              img.src = user.value.avatar; img.classList.remove('hidden'); ini.classList.add('hidden');
+            } else {
+              ini.textContent = (user.value?.name || 'U').slice(0, 1).toUpperCase(); img.classList.add('hidden'); ini.classList.remove('hidden');
+            }
+          } else {
+            out.classList.remove('hidden'); inx.classList.add('hidden');
+          }
+        }
+        function bindAvatarMenu() {
+          const btn = document.getElementById('avatarBtn');
+          const menu = document.getElementById('avatarMenu');
+          const logoutBtn = document.getElementById('logoutBtn');
+          if (btn) {
+            btn.onclick = () => menu.classList.toggle('hidden');
+            document.addEventListener('click', (e) => {
+              if (!menu) return;
+              if (!e.target.closest('#avatarBtn') && !e.target.closest('#avatarMenu')) menu.classList.add('hidden');
+            });
+          }
+          if (logoutBtn) {
+            logoutBtn.onclick = async () => {
+              await doLogout();           // 走接口版退出，清服务端会话 + 回到首页
+              menu?.classList.add('hidden'); // 把头像菜单收起来，避免悬空
+            };
+          }
+
+        }
+
+        // 放到 setup() 里，替换掉旧的 isDark/applyDark/toggleDark
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        const THEME_KEY = 'theme'; // 'system' | 'dark' | 'light'
+
+        const pref = Vue.ref(localStorage.getItem(THEME_KEY) || 'system');
+        const isDark = Vue.computed(() => pref.value === 'dark' || (pref.value === 'system' && media.matches));
+
+        function applyTheme() {
+          document.documentElement.classList.toggle('dark', isDark.value);
+          localStorage.setItem(THEME_KEY, pref.value);
+        }
+
+        // ① 第一次明确写入 system，避免 null 情况
+        if (localStorage.getItem(THEME_KEY) == null) {
+          localStorage.setItem(THEME_KEY, 'system');
+        }
+
+        // ② 进页就按当前偏好应用一次
+        applyTheme();
+
+        // ③ 跟随系统 + 跨标签同步
+        media.addEventListener?.('change', () => { if (pref.value === 'system') applyTheme(); });
+        window.addEventListener('storage', (e) => {
+          if (e.key === THEME_KEY) {
+            pref.value = localStorage.getItem(THEME_KEY) || 'system';
+            applyTheme();
+          }
+        });
+
+
+        function toggleDark() { // 绑定在按钮上
+          pref.value = pref.value === 'system' ? 'dark' : pref.value === 'dark' ? 'light' : 'system';
+          applyTheme();
+        }
+
+        // 基本状态
+        const q = ref(localStorage.getItem('q') || '');
+        const openAgeGate = ref(false);
+        const ageVerified = ref(localStorage.getItem('ageVerified') === '1');
+        const quickView = ref(null);
+        const showNav = ref(false);
+        const loading = ref(true);
+        const viewMode = ref('grid');
+
+        const platforms = ['PC', 'Switch', 'PS4', 'PS5', 'PSV'];
+        const tagPool = ['校园', '恋爱', '群像', '治愈', '日常', '科幻', '解谜', '悬疑', 'R-18', '剧情', '百合', '推理', '战斗', '奇幻', '搞笑', '时间穿越', '黑暗'];
+
+        const filters = ref(JSON.parse(localStorage.getItem('filters') || '{"platform":"","sort":"-date","tags":[]}'));
+
+        const source = ref([]);
+        const view = ref([]);
+
+        // 年份范围（计算 + 本地存储）
+        const years = computed(() => source.value.map(g => new Date(g.releaseDate).getFullYear()));
+        const minYear = computed(() => Math.min(...years.value));
+        const maxYear = computed(() => Math.max(...years.value));
+        const savedYR = JSON.parse(localStorage.getItem('yearRange') || 'null');
+        const yearRange = ref(savedYR && savedYR.length === 2 ? savedYR : [minYear, maxYear]);
+
+        // 分页（网格）
+        const pageSize = ref(12);
+        const page = ref(Number(localStorage.getItem('page') || 1));
+        const pages = computed(() => Math.max(1, Math.ceil(view.value.length / pageSize.value)));
+        const total = computed(() => view.value.length);
+        const pageView = computed(() =>
+          view.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value)
+        );
+
+        // 数字分页（1/2/3… 带省略号）
+        const pageNumbers = computed(() => {
+          const res = [];
+          const totalPages = pages.value;
+          const cur = page.value;
+          const push = (n) => res.push({ key: 'p' + res.length, num: n });
+          if (totalPages <= 10) {
+            for (let i = 1; i <= totalPages; i++) push(i);
+            return res;
+          }
+          push(1);
+          if (cur > 4) push('…');
+          for (let i = Math.max(2, cur - 2); i <= Math.min(totalPages - 1, cur + 2); i++) push(i);
+          if (cur < totalPages - 3) push('…');
+          push(totalPages);
+          return res.map((n, i) => ({ num: n, key: 'p' + i }));
+        });
+
+        // 收藏/评分（游戏 + 制作社）
+        const favSet = ref(new Set(JSON.parse(localStorage.getItem('favs') || '[]'))); // 游戏ID
+        const favStudios = ref(new Set(JSON.parse(localStorage.getItem('fav_studios') || '[]'))); // 制作社名
+        const myRates = ref(JSON.parse(localStorage.getItem('rates') || '{}'));
+
+        async function toggleFav(g) {
+          const id = typeof g === 'string' ? g : g.id;
+          if (!auth.value?.loggedIn) {
+            if (favSet.value.has(id)) favSet.value.delete(id); else favSet.value.add(id);
+            localStorage.setItem('favs', JSON.stringify([...favSet.value]));
+            return;
+          }
+          const liked = favSet.value.has(id);
+          const r = liked
+            ? await api(`/favorites/games/${encodeURIComponent(id)}`, { method: 'DELETE' })
+            : await api('/favorites/games', { method: 'POST', body: JSON.stringify({ id }) });
+          if (r.ok) await refreshFavoritesFromServer();
+        }
+
+
+
+        async function migrateLocalFavsOnce() {
+          if (localStorage.getItem('migrated')) return;
+          const r = await api('/favorites');
+          if (!r.ok) return;
+          const data = await r.json();
+          const serverG = new Set(data.games || []);
+          const serverS = new Set(data.studios || []);
+
+          const localG = JSON.parse(localStorage.getItem('favs') || '[]');
+          const localS = JSON.parse(localStorage.getItem('fav_studios') || '[]');
+
+          const addG = localG.filter(id => !serverG.has(id));
+          const addS = localS.filter(nm => !serverS.has(nm));
+
+          await Promise.all([
+            ...addG.map(id => api('/favorites/games', { method: 'POST', body: JSON.stringify({ id }) })),
+            ...addS.map(nm => api('/favorites/studios', { method: 'POST', body: JSON.stringify({ name: nm }) }))
+          ]);
+
+          // 成功一次就不再重复
+          localStorage.setItem('migrated', '1');
+        }
+
+
+        async function refreshFavoritesFromServer() {
+          const r = await api('/favorites');
+          if (!r.ok) return;
+          const data = await r.json();
+          favSet.value = new Set(data.games || []);
+          favStudios.value = new Set(data.studios || []);
+        }
+
+
+        function isFav(id) { return favSet.value.has(id); }
+
+        function toggleFavStudio(name) {
+          if (favStudios.value.has(name)) favStudios.value.delete(name);
+          else favStudios.value.add(name);
+          localStorage.setItem('fav_studios', JSON.stringify([...favStudios.value]));
+        }
+        function isFavStudio(name) { return favStudios.value.has(name); }
+
+        function rate(id, s) { myRates.value[id] = s; localStorage.setItem('rates', JSON.stringify(myRates.value)); }
+        function getRate(id) { return myRates.value[id] || 0; }
+
+        // 时间线派生
+        const timelineMap = computed(() => {
+          const map = {};
+          for (const g of view.value) {
+            const y = new Date(g.releaseDate).getFullYear();
+            (map[y] ||= []).push(g);
+          }
+          Object.values(map).forEach(arr => arr.sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate)));
+          return map;
+        });
+        const timelineYears = computed(() => Object.keys(timelineMap.value).sort((a, b) => b - a));
+
+        // 制作社图鉴视图
+        const studios = ref({});
+        const studioQ = ref('');
+        const studioSort = ref('name');
+        const studioView = computed(() => {
+          const entries = Object.entries(studios.value).filter(([name, m]) => {
+            const hay = [name, (m.intro || ''), ...(m.people || []), ...(m.works || [])].join(' ').toLowerCase();
+            return !studioQ.value || hay.includes((studioQ.value || '').toLowerCase());
+          });
+          entries.sort((a, b) => {
+            if (studioSort.value === 'name') return a[0].localeCompare(b[0], 'zh-Hans-CN');
+            if (studioSort.value === 'founded') return Number((a[1].founded || 0)) - Number((b[1].founded || 0));
+            if (studioSort.value === 'works') return (b[1].works?.length || 0) - (a[1].works?.length || 0);
+            return 0;
+          });
+          return Object.fromEntries(entries);
+        });
+
+        // 过滤
+        const normalize = s => (s || '').toLowerCase();
+        function inYearRange(g) {
+          const y = Number(new Date(g.releaseDate).getFullYear());
+          return y >= yearRange.value[0] && y <= yearRange.value[1];
+        }
+        // 接受 overrideQ：当有传值时，用它做匹配；否则用 q.value
+        function applyFilters(overrideQ) {
+          const needle = String((overrideQ ?? q.value) || '')
+            .trim()
+            .toLowerCase();
+          let base = source.value;
+          if (needle && fuse.value) {
+            base = fuse.value.search(needle).slice(0, 300).map(r => r.item);
+          }
+
+          let arr = base.filter(g => {           // ← 用 base
+            const hitPlat = !filters.value.platform || g.platforms.includes(filters.value.platform);
+            const hitTags = filters.value.tags.length === 0 || filters.value.tags.every(t => g.tags.includes(t));
+            const y = Number(new Date(g.releaseDate).getFullYear());
+            const inYear = y >= yearRange.value[0] && y <= yearRange.value[1];
+            return hitPlat && hitTags && inYear; // 已用 Fuse 命中，不再做 includes 复筛
+          });
+
+
+          switch (filters.value.sort) {
+            case '-rating': arr.sort((a, b) => b.rating - a.rating); break;
+            case '-date': arr.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate)); break;
+            case 'title': arr.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hans-CN')); break;
+            default: arr.sort((a, b) => b.hot - a.hot);
+          }
+
+          view.value = arr;
+          if ((page.value - 1) * pageSize.value >= arr.length) page.value = 1;
+        }
+
+        function resetFilters() {
+          q.value = '';
+          filters.value = { platform: '', sort: '-hot', tags: [] };
+          yearRange.value = [minYear, maxYear];
+          page.value = 1; applyFilters();
+        }
+        function resetYears() { yearRange.value = [minYear, maxYear]; applyFilters(); }
+        function toggleTag(t) { const i = filters.value.tags.indexOf(t); if (i >= 0) filters.value.tags.splice(i, 1); else filters.value.tags.push(t); page.value = 1; applyFilters(); }
+        function fixYearOrder(which) {
+          const [a, b] = yearRange.value;
+          if (which === 'min' && a > b) yearRange.value = [b, b];
+          if (which === 'max' && b < a) yearRange.value = [a, a];
+          applyFilters();
+        }
+
+        // 工具
+        function fmtDate(d) { try { return new Date(d).toISOString().slice(0, 10) } catch { return d } }
+        function fmtTime(ts) {
+          const diff = Date.now() - ts;
+          const m = Math.floor(diff / 60000);
+          if (m < 1) return '刚刚';
+          if (m < 60) return `${m} 分钟前`;
+          const h = Math.floor(m / 60);
+          if (h < 24) return `${h} 小时前`;
+          const d = Math.floor(h / 24);
+          if (d < 7) return `${d} 天前`;
+          const dt = new Date(ts);
+          return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        }
+        function confirmAdult(ok) { ageVerified.value = !!ok; localStorage.setItem('ageVerified', ok ? '1' : '0'); openAgeGate.value = false; }
+        function openQuickViewFn(g) { quickView.value = JSON.parse(JSON.stringify(g)); }
+        function toPage(p) {
+          page.value = Math.min(Math.max(1, p), pages.value);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 跳转（商店）
+        function openGameLink(g, kind) {
+          const block = g.isAdult && !ageVerified.value;
+          if (block) { openAgeGate.value = true; return; }
+          if (kind === 'store') { if (g.store?.url) window.open(g.store.url, '_blank'); }
+        }
+
+        // 占位图
+        function coverAnime(g) {
+          if (g.coverUrl) return g.coverUrl;
+          const tag = (g.tags && g.tags[0]) ? g.tags[0] : 'Galgame';
+          return coverAnimeUrl(`${tag}%0A${g.title}`);
+        }
+        function galleryAnime(g, i) {
+          if (g.gallery && g.gallery[i]) return g.gallery[i];
+          const tag = (g.tags && g.tags[i % g.tags.length]) ? g.tags[i % g.tags.length] : 'CG';
+          return galleryAnimeUrl(`${tag}`);
+        }
+        function bannerCandidates(name, m) {
+          const slug = (m?.slug) || name.toLowerCase().replace(/\s+/g, '-');
+          const cand = [];
+          if (m?.banner) cand.push(m.banner); // 显式配置优先
+          cand.push(
+            `assets/img/studios/${slug}/banner.webp`,
+            `assets/img/studios/${slug}/banner.jpg`,
+            `assets/img/studios/${slug}/banner.png`
+          );
+          return cand;
+        }
+
+        // ======= 评论（按作品ID存储） =======
+        const comments = ref(JSON.parse(localStorage.getItem('comments') || '{}')); // {gameId: [{id, ts, text, user}]}
+        const commentDraft = ref({});
+        function commentsBy(id) { return comments.value[id] || []; }
+        function submitComment(id) {
+          const text = (commentDraft.value[id] || '').trim();
+          if (!text) return;
+          const item = { id: uid(), ts: Date.now(), text, user: user.value ? { name: user.value.name } : { name: '匿名' } };
+          const list = comments.value[id] || [];
+          list.unshift(item);
+          comments.value[id] = list;
+          localStorage.setItem('comments', JSON.stringify(comments.value));
+          commentDraft.value[id] = '';
+        }
+
+        // ======= 主页讨论区（简单帖） =======
+        const forumPosts = ref(JSON.parse(localStorage.getItem('forum_posts') || '[]')); // [{id,title,content,ts,user,likes}]
+        const forumDraft = ref({ title: '', content: '' });
+        const forumPostsSorted = computed(() => [...forumPosts.value].sort((a, b) => b.ts - a.ts));
+        function postToForum() {
+          const content = (forumDraft.value.content || '').trim();
+          const title = (forumDraft.value.title || '').trim();
+          if (!content) return;
+          forumPosts.value.unshift({
+            id: uid(),
+            title,
+            content,
+            ts: Date.now(),
+            user: user.value ? { name: user.value.name } : { name: '匿名' },
+            likes: 0
+          });
+          localStorage.setItem('forum_posts', JSON.stringify(forumPosts.value));
+          forumDraft.value = { title: '', content: '' };
+        }
+        function likePost(id) {
+          const p = forumPosts.value.find(x => x.id === id);
+          if (!p) return;
+          p.likes = (p.likes || 0) + 1;
+          localStorage.setItem('forum_posts', JSON.stringify(forumPosts.value));
+        }
+        function seedDemoPosts() {
+          if (forumPosts.value.length > 0) return;
+          const now = Date.now();
+          forumPosts.value = [
+            { id: uid(), title: '新手入坑推荐', content: '想先玩治愈系，大家有什么推荐？', ts: now - 3600_000, user: { name: 'Alice' }, likes: 3 },
+            { id: uid(), title: 'FLOWERS 系列讨论', content: '春/夏/秋/冬各自最喜欢的章节是？', ts: now - 7200_000, user: { name: 'Bob' }, likes: 5 }
+          ];
+          localStorage.setItem('forum_posts', JSON.stringify(forumPosts.value));
+        }
+
+        // ======= 收藏页派生视图 =======
+        const favQ = ref('');
+        const favGamesView = computed(() => {
+          const ids = new Set([...favSet.value]);
+          const q = (favQ.value || '').toLowerCase();
+          return source.value.filter(g => ids.has(g.id)).filter(g => !q || (g.title.toLowerCase().includes(q) || (g.maker || '').toLowerCase().includes(q)));
+        });
+        const favStudiosView = computed(() => {
+          const names = [...favStudios.value];
+          const q = (favQ.value || '').toLowerCase();
+          return names.filter(n => !q || n.toLowerCase().includes(q));
+        });
+        function clearFavs() {
+          favSet.value.clear(); favStudios.value.clear();
+          localStorage.setItem('favs', JSON.stringify([]));
+          localStorage.setItem('fav_studios', JSON.stringify([]));
+        }
+
+
+
+        // ======= Auth：登录/注册/资料 =======
+        const authLogin = ref({ email: '', password: '' });
+        const authReg = ref({ name: '', email: '', password: '' });
+        // 会话（从 cookie 恢复）
+        const auth = ref({ loggedIn: false, user: null, loading: true });
+        const resetEmail = ref('');
+        const newPassword = ref('');
+
+
+        const verifyEmail = ref('');     // 验证邮箱页用
+        const verifyCode = ref('');     // 6位验证码（验证邮箱）
+        const resetCode = ref('');     // 6位验证码（重置密码）
+        const otpCooldown = ref(0);      // 发送倒计时（秒）
+        let otpTimer = null;
+
+        // 统一请求（带 cookie）
+        const j = b => JSON.stringify(b);
+        const API_BASE = 'http://127.0.0.1:8080';   // 你的后端端口，application.properties 里是 8080
+
+        const api = (path, init = {}) =>
+          fetch(API_BASE + path, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+            ...init
+          });
+
+
+        async function restoreSession() {
+          try {
+            const r = await api('/me');            // 验证 cookie 获取会话
+            if (!r.ok) throw 0;
+            const data = await r.json();
+            auth.value = { loggedIn: true, user: data.profile, loading: false };
+            await migrateLocalFavsOnce();          // ← 新增
+            await refreshFavoritesFromServer();    // ← 新增
+          } catch {
+            auth.value = { loggedIn: false, user: null, loading: false };
+          }
+        }
+
+        async function doRegister() {
+          const name = (authReg.value?.name || '').trim();
+          const email = (authReg.value?.email || '').trim().toLowerCase();
+          const pwd = authReg.value?.password || '';
+          if (!name || !email || !pwd) { alert('请完整填写'); return; }
+
+          if (!isEmailVerified(email)) {
+            alert('请先获取并提交 6 位邮箱验证码通过验证，再注册。');
+            return;
+          }
+
+          const r = await api('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ displayName: name, email, password: pwd })
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) { alert('注册失败：' + (data.error || r.status)); return; }
+
+          // 已验证后再注册，可直接登录
+          const me = await api('/me');
+          if (me.ok) {
+            const m = await me.json();
+            auth.value = { loggedIn: true, user: m.profile, loading: false };
+          }
+          nav('#/home');
+        }
+
+
+        // 登录
+        async function doLogin() {
+          const email = (authLogin.value?.email || '').trim();
+          const password = authLogin.value?.password || '';
+          if (!email || !password) { alert('请完整填写'); return; }
+
+          const r = await api('/auth/login', { method: 'POST', body: j({ email, password }) });
+          const tx = await r.json().catch(() => ({}));
+          if (!r.ok) { alert(tx.error || '登录失败'); return; }
+
+          const me = await api('/me');
+          if (!me.ok) { alert('获取会话失败'); return; }
+          const data = await me.json();
+
+          auth.value = { loggedIn: true, user: data.profile, loading: false };
+          await migrateLocalFavsOnce();          // ← 新增
+          await refreshFavoritesFromServer();    // ← 新增
+          nav('#/home');                       // 立刻跳转，UI 立即刷新
+        }
+
+        async function doLogout() {
+          await api('/auth/logout', { method: 'POST' });
+          auth.value = { loggedIn: false, user: null, loading: false };
+          nav('#/home');
+        }
+
+        async function saveProfile() {
+          const body = {
+            displayName: profile.value?.name || 'User',
+            bio: profile.value?.bio || '',
+            avatarUrl: profile.value?.avatar || ''
+          };
+          const r = await api('/profile', { method: 'PUT', body: j(body) });
+          if (!r.ok) { alert('保存失败'); return; }
+
+          const me = await api('/me');
+          if (me.ok) {
+            const data = await me.json();
+            auth.value = { loggedIn: true, user: data.profile, loading: false };
+          }
+          alert('已保存');
+        }
+
+
+        // 1) 注册：发送验证码
+        // async function requestVerifyCode() {
+        //   const email = (authReg?.value?.email || auth?.value?.user?.email || '').trim().toLowerCase();
+        //   if (!email) return;
+        //   const r = await api('/auth/request-code?type=VERIFY', {
+        //     method: 'POST',
+        //     body: j({ email })
+        //   });
+        //   if (!r.ok) alert((await r.text()) || '发送失败');
+        //     startOtpCooldown(60);  
+        // }
+
+        async function requestVerifyCode() {
+          const email = (authReg?.value?.email || '').trim().toLowerCase();
+          if (!email) return;
+
+          try {
+            const r = await api(`/auth/request-code?type=VERIFY&email=${encodeURIComponent(email)}`, {
+              method: 'POST',
+              body: JSON.stringify({ email })
+            });
+
+            const txt = await r.text(); // 先读文本
+            if (!r.ok) {
+              alert(`发送失败 (${r.status})：${txt || '无返回文本'}`);
+              return;
+            }
+            // 成功
+            startOtpCooldown(60);
+            alert(txt || '验证码已发送');
+          } catch (e) {
+            alert('网络异常：' + e);
+          }
+        }
+        // 忘记密码：发送 6 位验证码
+        async function requestResetCode() {
+          const email = (resetEmail?.value || '').trim().toLowerCase();
+          if (!email) return;
+          const r = await api('/auth/request-code?type=RESET', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          if (!r.ok) alert((await r.text()) || '发送失败');
+          startOtpCooldown(60);
+        }
+
+        // 2) 注册：提交验证码
+        async function submitVerifyCode() {
+          const email = (authReg?.value?.email || '').trim().toLowerCase();
+          const code = (verifyCode?.value || '').replace(/\D/g, '').slice(0, 6);
+          if (!email || code.length !== 6) { alert('请输入邮箱和6位验证码'); return; }
+
+          // const r = await api(`/auth/verify-by-code?code=${encodeURIComponent(code)}`, {
+          //   method: 'POST',
+          //   body: JSON.stringify({ email })
+          // });
+
+          // 先尝试你后端常用的 verify-by-code
+          let r = await api(`/auth/verify-by-code?code=${encodeURIComponent(code)}&type=VERIFY`, {
+            method: 'POST',
+            body: JSON.stringify({ email })
+          });
+
+          // 若接口名不同（返回404），再试一个常见别名
+          if (r.status === 404) {
+            r = await api(`/auth/verify-code?type=REGISTER`, {
+              method: 'POST',
+              body: JSON.stringify({ email, code })
+            });
+          }
+
+          if (!r.ok) { alert((await r.text()) || '验证码错误或已过期'); return; }
+          markEmailVerified(email);
+          alert('验证成功，可以点击“注册并登录”了');
+        }
+
+
+
+        // 4) 忘记密码：用验证码重置
+        async function resetByCode() {
+          const email = (resetEmail?.value || '').trim().toLowerCase();
+          const code = (resetCode?.value || '').replace(/\D/g, '').slice(0, 6);
+          const pwd = (newPassword?.value || '').toString();
+          if (!email || code.length !== 6 || !pwd) { alert('请填完整'); return; }
+          const r = await api('/auth/reset-by-code', {
+            method: 'POST',
+            body: j({ email, code, newPassword: pwd })
+          });
+          if (!r.ok) { alert((await r.text()) || '重置失败'); return; }
+          alert('密码已重置，请登录');
+          nav('#/login');
+        }
+
+        // 验证邮箱：路由进入时自动调用
+        async function verifyEmailIfNeeded() {
+          if (!route.value.startsWith('/verify')) return;
+          const token = (location.hash.split('?')[1] || '').replace(/^token=/, '').split('&')[0];
+          if (!token) return;
+          const r = await api(`/auth/verify?token=${encodeURIComponent(token)}`);
+          if (r.ok) { alert('邮箱验证成功'); await restoreSession(); nav('#/home'); }
+          else { alert('验证失败或链接过期'); nav('#/home'); }
+        }
+
+        function uploadAvatar(e) {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => { profile.value.avatar = reader.result; };
+          reader.readAsDataURL(file);
+        }
+
+        // 持久化监听
+        watch([filters, q, page, yearRange, viewMode], () => {
+          localStorage.setItem('filters', JSON.stringify(filters.value));
+          localStorage.setItem('q', q.value);
+          localStorage.setItem('page', String(page.value));
+          localStorage.setItem('yearRange', JSON.stringify(yearRange.value));
+          localStorage.setItem('viewMode', viewMode.value);
+        }, { deep: true });
+
+        // 初始化
+        // 初始化
+        onMounted(async () => {
+          applyBg('./cele.jpg');
+          media.addEventListener?.('change', () => { if (pref.value === 'system') applyTheme(); });
+
+          // 1) 先把 UI/主题这些一次性挂好
+          mountDynamicBackground();
+
+          refreshUserEntry();
+          bindAvatarMenu();
+
+          await restoreSession();
+
+
+          // 1) 拉取最新的 games.json（禁止缓存）
+          const res = await fetch(`assets/games.json?v=${Date.now()}`, { cache: 'no-store' });
+          const list = await res.json();
+
+          // 2) 喂给数据源，然后再做筛选
+          source.value = Array.isArray(list) ? list : [];
+          view.value = [...source.value];
+
+
+
+          // 读取制作社
+          try {
+            const sres = await fetch(`assets/studios.json?v=${Date.now()}`, { cache: 'no-store' });
+            const smap = await sres.json();
+            console.log('studios.json keys:', Object.keys(smap || {}));
+            studios.value = smap || {};
+          } catch (e) {
+            console.warn('读取 assets/studios.json 失败：', e);
+            studios.value = {};
+          }
+          applyFilters();
+
+
+          await verifyEmailIfNeeded();
+
+
+          // 建 Fuse 索引（中文也能用，阈值可按需调整）
+          // 注意：title/altTitles 权重大一些，desc 权重最小
+          fuse.value = new Fuse(list, {
+            includeScore: true,
+            threshold: 0.34,           // 0~1 越小越严格，建议 0.28~0.38 区间
+            distance: 100,
+            minMatchCharLength: 1,
+            keys: [
+              { name: 'title', weight: 2.0 },
+              { name: 'altTitles', weight: 1.6 },
+              { name: 'maker', weight: 1.3 },
+              { name: 'tags', weight: 1.2 },
+              { name: 'platforms', weight: 0.8 },
+              { name: 'desc', weight: 0.35 }
+            ]
+          });
+
+          // 3) 应用筛选 & 打开骨架
+          setTimeout(() => (loading.value = false), 280);
+
+          // 4) 快捷键
+          window.addEventListener('keydown', (e) => {
+            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+              e.preventDefault();
+              document.querySelector('input[placeholder^="搜索"]')?.focus();
+            }
+            // if (e.key.toLowerCase() === 'd') toggleDark();
+            if (e.key === 'Escape') {
+              if (openAgeGate.value) openAgeGate.value = false;
+              if (quickView.value) quickView.value = null;
+            }
+          });
+
+          // 5) 若带 ?to=resources，等 DOM 出来后滚到锚点
+          setTimeout(scrollIfAnchor, 50);
+        });
+
+
+        function scrollIfAnchor() {
+          const { q } = routeParam();
+          if (q.to === 'resources') {
+            // 等 DOM 出来再滚动
+            setTimeout(() => {
+              document.getElementById('resources')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
+          }
+        }
+        window.addEventListener('hashchange', scrollIfAnchor, { passive: true });
+        scrollIfAnchor();
+
+
+
+
+        // === 悬停打开“快速详情” ===
+        const hoverTimer = ref(null);
+        const lastHoverId = ref(null);
+
+        function scheduleQuickView(g, delay = 520) {
+          // 移动端不用 hover，直接忽略
+          if (matchMedia('(hover: none)').matches) return;
+          cancelQuickView();                 // 先清掉旧的定时器
+          lastHoverId.value = typeof g === 'string' ? g : g?.id;
+          hoverTimer.value = setTimeout(() => {
+            const item = typeof g === 'string'
+              ? source.value.find(x => x.id === g)
+              : g;
+            if (item) quickView.value = JSON.parse(JSON.stringify(item));
+          }, delay);
+        }
+        function cancelQuickView() {
+          if (hoverTimer.value) { clearTimeout(hoverTimer.value); hoverTimer.value = null; }
+          lastHoverId.value = null;
+        }
+
+        // 可选：给点击/键盘直接打开
+        function openQuickViewImmediate(g) {
+          const item = typeof g === 'string' ? source.value.find(x => x.id === g) : g;
+          if (item) quickView.value = JSON.parse(JSON.stringify(item));
+        }
+
+        function isMediaFile(u=''){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
+
+function embedUrl(u=''){
+  if(!u) return '';
+  // 提取 BV、分P与起始秒
+  const bv = (u.match(/BV[\w]+/)||[])[0];
+  if(!bv) return '';
+  let p=1, t=0;
+  try{
+    const url = new URL(u, location.href);
+    p = Number(url.searchParams.get('p')) || 1;
+    t = Number(url.searchParams.get('t')) || 0;
+  }catch{}
+  return `https://player.bilibili.com/player.html?bvid=${bv}&p=${p}&t=${t}&autoplay=1&muted=1`;
+}
+
+
+        // 暴露到模板
+        return {
+          // 路由
+          route, nav,
+          auth, doLogout,
+          // 验证码/找回密码区用到的：
+          otpCooldown, verifyCode, resetEmail, resetCode, newPassword,
+          requestVerifyCode, requestResetCode, submitVerifyCode, resetByCode,
+          isEmailVerified,
+          avatarOpen,
+          currentGame,
+          // 用户 & 主题
+          user, isLoggedIn, profile, saveProfile, uploadAvatar,
+          authLogin, authReg, doLogin, doRegister,
+          pref,
+          toggleDark,
+          // 顶部状态
+          q, openAgeGate, ageVerified, quickView, showNav, isDark, loading, viewMode,
+          // 过滤
+          filters, platforms, tagPool, applyFilters, resetFilters, toggleTag, debouncedApply,
+          // 年份
+          minYear, maxYear, yearRange, fixYearOrder, resetYears,
+          // 数据派生
+          view, pageView, page, pages, total, pageNumbers,
+          timelineMap, timelineYears,
+          // 制作社图鉴
+          studios, studioQ, studioSort, studioView, bannerCandidates,  isMediaFile,
+  embedUrl,
+
+          // 交互方法
+          fmtDate, fmtTime, confirmAdult, openQuickView: openQuickViewFn, toPage,
+          openGameLink, goGame,
+          // 收藏/评分
+          toggleFav, isFav, rate, getRate,
+          toggleFavStudio, isFavStudio,
+          // 收藏页
+          favQ, favGamesView, favStudiosView, clearFavs,
+          // 占位图
+          coverAnime, galleryAnime,
+          // 讨论区
+          forumPosts, forumDraft, forumPostsSorted, postToForum, likePost, seedDemoPosts,
+          // 评论
+          commentsBy, commentDraft, submitComment,
+          //悬停
+          scheduleQuickView, cancelQuickView, openQuickViewImmediate
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

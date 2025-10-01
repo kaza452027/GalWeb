@@ -1,0 +1,53 @@
+[
+  {
+    "id": "clannad",
+    "title": "CLANNAD",
+    "maker": "Key",
+    "platforms": [
+      "PC",
+      "Switch"
+    ],
+    "tags": [
+      "治愈",
+      "日常",
+      "群像"
+    ],
+    "isAdult": false,
+    "rating": 9.1,
+    "hot": 2100,
+    "releaseDate": "2004-04-28",
+    "desc": "以亲情与成长为核心的代表作。",
+    "official": "https://key.visualarts.gr.jp/product/clannad/story/",
+    "resource": "https://www.acgndog.com/download#eyJhbGciOiJzaGEyNTYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJJTk4gU1RVRElPIiwiZXhwIjoxNzU4NzgzNzM5LCJzdWIiOiJqd3QiLCJhdWQiOiIxNzM1MSIsIm5iZiI6MTc1ODc4MDEzOSwiaWF0IjoxNzU4NzgwMTM5LCJqdGkiOjF9.719380bfaccfb760171f6c9341693819c9eed0b8c915a466d5291ca96eba5566",
+    "video": "https://www.bilibili.com/video/BV1KE411y7Y3",
+    "coverUrl": "assets/img/games/clannad/cover.webp",
+    "gallery": [
+      "assets/img/games/clannad/shot-1.webp",
+      "assets/img/games/clannad/shot-2.webp",
+      "assets/img/games/clannad/shot-3.webp"
+    ]
+  },
+  {
+    "id": "flowers",
+    "title": "FLOWERS -Le volume sur printemps-",
+    "maker": "Innocent Grey",
+    "platforms": [
+      "PC",
+      "PSV"
+    ],
+    "tags": [
+      "百合",
+      "文艺"
+    ],
+    "isAdult": false,
+    "rating": 0,
+    "hot": 0,
+    "releaseDate": "2014-04-18",
+    "desc": "",
+    "official": "",
+    "resource": "",
+    "video": "",
+    "coverUrl": "assets/img/games/flowers/cover.png",
+    "gallery": []
+  }
+]

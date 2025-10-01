@@ -1,0 +1,49 @@
+{
+  "Innocent Grey": {
+    "founded": "2004",
+    "intro": "以悬疑/推理与成人题材见长……",
+    "people": ["杉菜水姬", "しまどりる"],
+    "works": ["殻ノ少女", "Cartagra", "FLOWERS 系列"],
+    "banner": "assets/img/studios/innocent-grey/banner.webp"
+  },
+  "Key": {
+    "founded": "1998",
+    "intro": "“泪目系”标志品牌……",
+    "people": ["麻枝准", "Na-Ga"],
+    "works": ["CLANNAD", "Little Busters!", "Rewrite"],
+    "banner": "assets/img/studios/key/banner.webp"
+  },
+  "TYPE-MOON": {
+        "founded": "2000",
+        "intro": "宏大奇幻设定与世界观塑造，人物群像鲜明，跨媒介影响力强。",
+        "people": ["奈须蘑菇（剧本）", "武内崇（原画）"],
+        "works": ["Fate/stay night", "月姬", "空之境界（相关）"]
+      },
+      "Nitroplus": {
+        "founded": "2000",
+        "intro": "黑暗科幻、暴力美学、与实验性叙事并重。",
+        "people": ["虚渊玄", "石渡マコト"],
+        "works": ["装甲恶鬼村正", "Phantom", "STEINS;GATE（协力）"]
+      },
+      "Frontwing": {
+        "founded": "1999",
+        "intro": "商业化程度高的品牌，代表作为《灰色》系列。",
+        "people": ["渡边明夫（合作）", "藤崎由爱（合作）"],
+        "works": ["灰色的果实/迷宫/乐园"]
+      },
+      "minori": {
+        "founded": "2001",
+        "intro": "画面演出和美术极为精致，已停止活动但作品影响深远。",
+        "people": ["酒井伸和", "御影"],
+        "works": ["ef - a fairy tale of the two.", "eden*", "はるのあしおと"]
+      },
+      "Alicesoft": {
+        "founded": "1989",
+        "intro": "历史悠久的成人向品牌，战斗与经营系统见长。",
+        "people": ["おにぎりくん", "雷太"],
+        "works": ["兰斯系列", "大帝国", "超昂天使"]
+      }
+
+}
+
+

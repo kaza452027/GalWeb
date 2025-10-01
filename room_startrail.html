@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>room.cmymoon 星轨复刻</title>
+<style>
+  html,body{margin:0;height:100%;background:#151515;overflow:hidden;}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;}
+</style>
+</head>
+<body>
+<canvas id="startrack"></canvas>
+<script>
+(function(){
+  // === 1) 基本尺寸 ===
+  const view = document.getElementById('startrack');
+  const ctx = view.getContext('2d');
+  let vw = view.width  = view.offsetWidth;
+  let vh = view.height = view.offsetHeight;
+  const N = Math.max(vw, vh);
+
+  // 离屏画布（比可视区域大一圈，旋转时不露边）
+  const off = document.createElement('canvas');
+  off.width  = 2.6 * N;
+  off.height = 2.6 * N;
+  const octx = off.getContext('2d');
+
+  // === 2) 预绘制彩色散点 ===
+  const dots = [];
+  const randInt = (a,b)=> a + Math.round(Math.random()*(b-a));
+  for (let i=0;i<20000;i++){
+    dots.push({
+      x: randInt(-off.width,  off.width),
+      y: randInt(-off.height, off.height),
+      size: 1.2,
+      color: `rgba(${randInt(120,255)},${randInt(120,255)},${randInt(120,255)},${randInt(30,100)/100})`
+    });
+  }
+  for (let i=0;i<dots.length;i++){
+    const d = dots[i];
+    octx.beginPath();
+    octx.arc(d.x, d.y, d.size, 0, Math.PI*2, true);
+    octx.fillStyle = d.color;
+    octx.closePath();
+    octx.fill();
+  }
+
+  // === 3) 画布初始化 ===
+  ctx.fillStyle = 'rgba(21,21,21,1)';
+  ctx.fillRect(0,0,vw,vh);
+  ctx.lineCap = 'round';
+
+  // 右上“画外”偏轴：将坐标原点移到视图右边缘（和原站一致）
+  const pivotX = vw; // 原站代码用的是 view.width (变量名 l)
+  const pivotY = 0;
+  ctx.translate(pivotX, pivotY);
+
+  // === 4) 动画参数 ===
+  let frame = 0;
+  const SPEED_DEG = 0.025; // 每帧旋转角度（度）
+  const fadeEvery = 8;     // 每隔8帧做一次轻微遮盖
+  const fadeAfter = 150;   // 150帧后才开始做
+  const fadeAlpha = 0.04;  // 遮盖强度
+
+  function drawTexture(){
+    ctx.drawImage(off, -off.width/2, -off.height/2);
+  }
+  function rotateDeg(deg){
+    ctx.rotate(deg * Math.PI / 180);
+  }
+
+  function tick(){
+    requestAnimationFrame(tick);
+    drawTexture();
+    frame++;
+    if (frame > fadeAfter && frame % fadeEvery === 0){
+      ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+      const w = 3*N;
+      ctx.fillRect(-w, -w, w*2, w*2);
+    }
+    rotateDeg(SPEED_DEG); // 顺时针极慢旋转
+  }
+  tick();
+
+  // === 5) 自适应 ===
+  window.addEventListener('resize', ()=>{
+    vw = view.width  = view.offsetWidth;
+    vh = view.height = view.offsetHeight;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = 'rgba(21,21,21,1)';
+    ctx.fillRect(0,0,vw,vh);
+    ctx.translate(vw, 0); // 重新设置偏轴
+  });
+})();
+</script>
+</body>
+</html>

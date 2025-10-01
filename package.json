@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "scripts": {
+    "gen": "node scripts/gen-manifest.mjs",
+    "dev": "npx serve ."
+  }
+}
