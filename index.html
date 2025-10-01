@@ -1938,7 +1938,7 @@
 
         // 统一请求（带 cookie）
         const j = b => JSON.stringify(b);
-        const API_BASE = 'http://127.0.0.1:8080';   // 你的后端端口，application.properties 里是 8080
+        const API_BASE = 'https://galend.onrender.com';   // 你的后端端口，application.properties 里是 8080
 
         const api = (path, init = {}) =>
           fetch(API_BASE + path, {
@@ -2346,3 +2346,4 @@ function embedUrl(u=''){
 
 
 </html>
+
